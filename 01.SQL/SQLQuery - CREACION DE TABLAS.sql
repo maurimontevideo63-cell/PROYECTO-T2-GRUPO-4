@@ -1,10 +1,6 @@
 
 USE DM_FIJA_2025;
 GO
-
--- =============================================
--- 1. STAGING: recibe los datos del Excel
--- =============================================
 CREATE TABLE dbo.STG_PEDIDOS (
     SOT NVARCHAR(30)  NULL,
     DNI NVARCHAR(15)  NULL,
@@ -25,11 +21,6 @@ CREATE TABLE dbo.STG_PEDIDOS (
     Sub_Estado NVARCHAR(500) NULL
 );
 GO
-
--- =============================================
--- 2. DIMENSIONES
--- =============================================
-
 CREATE TABLE dbo.DIM_CLIENTE (
     Cliente_Key INT IDENTITY(1,1) PRIMARY KEY,
     Edad INT NULL,
@@ -80,10 +71,6 @@ CREATE TABLE dbo.DIM_FECHA (
 );
 GO
 
--- =============================================
--- 3. TABLA DE HECHOS: TRES MEDIDAS
--- =============================================
-
 CREATE TABLE dbo.FACT_PEDIDO (
     Pedido_Key INT IDENTITY(1,1) PRIMARY KEY,
 
@@ -120,10 +107,6 @@ CREATE TABLE dbo.FACT_PEDIDO (
         REFERENCES dbo.DIM_FECHA(Fecha_Key)
 );
 GO
-
--- =============================================
--- 4. TABLAS AUXILIARES PARA EVITAR DUPLICADOS
--- =============================================
 
 CREATE TABLE dbo.ETL_CLIENTE_MAP (
     DNI VARCHAR(15) PRIMARY KEY,

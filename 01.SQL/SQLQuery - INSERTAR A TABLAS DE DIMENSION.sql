@@ -11,10 +11,6 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- =========================================
-        -- PASO 1. PREPARAR LOS DATOS DE STAGING
-        -- =========================================
-
         ;WITH Datos AS
         (
             SELECT
@@ -103,12 +99,6 @@ BEGIN
         INTO #PEDIDOS_VALIDOS
         FROM Datos
         WHERE Numero_Fila = 1;
-
-
-        -- =========================================
-        -- PASO 2. PREPARAR LOS CLIENTES
-        -- =========================================
-
         ;WITH Clientes AS
         (
             SELECT *,
@@ -152,12 +142,6 @@ BEGIN
         INTO #CLIENTES
         FROM Clientes
         WHERE Numero_Fila = 1;
-
-
-        -- =========================================
-        -- PASO 3. INSERTAR CLIENTES NUEVOS
-        -- =========================================
-
         DECLARE @CLIENTES_NUEVOS TABLE
         (
             DNI VARCHAR(15),
@@ -189,12 +173,6 @@ BEGIN
             (DNI, Cliente_Key)
         SELECT DNI, Cliente_Key
         FROM @CLIENTES_NUEVOS;
-
-
-        -- =========================================
-        -- PASO 4. ACTUALIZAR CLIENTES EXISTENTES
-        -- =========================================
-
         UPDATE C
         SET
             C.Edad = COALESCE(N.Edad, C.Edad),
@@ -205,11 +183,6 @@ BEGIN
         INNER JOIN #CLIENTES AS N
             ON M.DNI = N.DNI;
 
-
-        -- =========================================
-        -- PASO 5. CARGAR DIM_ASESOR
-        -- =========================================
-
         INSERT INTO dbo.DIM_ASESOR (Nombre_Asesor)
         SELECT DISTINCT P.Nombre_Asesor
         FROM #PEDIDOS_VALIDOS AS P
@@ -219,12 +192,6 @@ BEGIN
             FROM dbo.DIM_ASESOR AS A
             WHERE A.Nombre_Asesor = P.Nombre_Asesor
         );
-
-
-        -- =========================================
-        -- PASO 6. CARGAR DIM_PLAN
-        -- =========================================
-
         INSERT INTO dbo.DIM_PLAN
             (Nombre_Plan, Tipo_Servicio)
         SELECT DISTINCT
@@ -238,11 +205,6 @@ BEGIN
             WHERE D.Nombre_Plan = P.Nombre_Plan
               AND D.Tipo_Servicio = P.Tipo_Servicio
         );
-
-
-        -- =========================================
-        -- PASO 7. CARGAR DIM_ZONA
-        -- =========================================
 
         INSERT INTO dbo.DIM_ZONA
         (
@@ -264,11 +226,6 @@ BEGIN
               AND Z.Departamento = P.Departamento
         );
 
-
-        -- =========================================
-        -- PASO 8. CARGAR DIM_TECNOLOGIA
-        -- =========================================
-
         INSERT INTO dbo.DIM_TECNOLOGIA (Tipo_Tecnologia)
         SELECT DISTINCT P.Tipo_Tecnologia
         FROM #PEDIDOS_VALIDOS AS P
@@ -278,11 +235,6 @@ BEGIN
             FROM dbo.DIM_TECNOLOGIA AS T
             WHERE T.Tipo_Tecnologia = P.Tipo_Tecnologia
         );
-
-
-        -- =========================================
-        -- PASO 9. CARGAR DIM_FECHA
-        -- =========================================
 
         DECLARE @Inicio DATE, @Fin DATE;
 
@@ -334,12 +286,6 @@ BEGIN
 
             SET @Inicio = DATEADD(DAY, 1, @Inicio);
         END;
-
-
-        -- =========================================
-        -- PASO 10. ACTUALIZAR PEDIDOS YA CARGADOS
-        -- =========================================
-
         UPDATE F
         SET
             F.Cliente_Key = M.Cliente_Key,
@@ -394,11 +340,6 @@ BEGIN
 
         INNER JOIN dbo.DIM_FECHA AS FE
             ON B.Fecha_Pedido = FE.Fecha;
-
-
-        -- =========================================
-        -- PASO 11. INSERTAR PEDIDOS NUEVOS
-        -- =========================================
 
         DECLARE @PEDIDOS_NUEVOS TABLE
         (
@@ -493,11 +434,6 @@ BEGIN
             (SOT, Pedido_Key)
         SELECT SOT, Pedido_Key
         FROM @PEDIDOS_NUEVOS;
-
-
-        -- =========================================
-        -- PASO 12. TERMINAR Y MOSTRAR RESULTADOS
-        -- =========================================
 
         COMMIT TRANSACTION;
 
